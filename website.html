@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image Authenticity Checker</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      max-width: 350px;
+      width: 100%;
+      padding: 20px;
+      text-align: center;
+      position: relative;
+    }
+
+    h1, h2 {
+      color: #000;
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0 0 10px 0;
+    }
+
+    p {
+      color: #666;
+      font-size: 14px;
+      margin: 0 0 20px 0;
+    }
+
+    label {
+      font-size: 1.1em;
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .id-icon {
+      width: 200px;
+      height: 120px;
+      margin: 20px auto;
+      position: relative;
+    }
+
+    .id-icon svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .id-frame {
+      position: absolute;
+      top: -5px;
+      left: -5px;
+      width: calc(100% + 10px);
+      height: calc(100% + 10px);
+      border: 2px solid #FF6200;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+
+    .id-frame::before,
+    .id-frame::after,
+    .id-frame span::before,
+    .id-frame span::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #FF6200;
+    }
+
+    .id-frame::before {
+      top: -2px;
+      left: -2px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .id-frame::after {
+      top: -2px;
+      right: -2px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .id-frame span::before {
+      bottom: -2px;
+      left: -2px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .id-frame span::after {
+      bottom: -2px;
+      right: -2px;
+      border-left: none;
+      border-top: none;
+    }
+
+    .scan-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background: rgba(255, 98, 0, 0.3);
+      border-radius: 8px;
+      animation: scan 2s infinite linear;
+      display: none;
+    }
+
+    @keyframes scan {
+      0% { transform: translateY(-100%); }
+      50% { transform: translateY(calc(100% + 90px)); }
+      100% { transform: translateY(-100%); }
+    }
+
+    .upload-btn {
+      background-color: #000;
+      color: #fff;
+      padding: 12px 0;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      max-width: 200px;
+      transition: background-color 0.3s ease;
+      display: inline-block;
+    }
+
+    .upload-btn:hover {
+      background-color: #333;
+    }
+
+    .result {
+      margin-top: 25px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .result.real {
+      color: #2e8b57;
+    }
+
+    .result.fake {
+      color: #d9534f;
+    }
+
+    .result.error {
+      color: #c9302c;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #2e8b57;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .tips {
+      text-align: left;
+      margin-top: 20px;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .tips ul {
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .tips li {
+      margin-bottom: 10px;
+    }
+
+    .result-success, .result-failure {
+      display: none;
+    }
+
+    .result-success h2 {
+      color: #000;
+    }
+
+    .result-failure h2 {
+      color: #000;
+    }
+
+    .checkmark {
+      font-size: 60px;
+      color: #00C853;
+      margin: 20px 0;
+    }
+
+    .cross {
+      font-size: 60px;
+      color: #FF0000;
+      margin: 20px 0;
+    }
+
+    .try-again-btn {
+      background-color: #000;
+      color: #fff;
+      padding: 12px 0;
+      border: none;
+      border-radius: 25px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      max-width: 200px;
+      transition: background-color 0.3s ease;
+      display: inline-block;
+      margin-top: 20px;
+    }
+
+    .try-again-btn:hover {
+      background-color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Giao diện ban đầu -->
+    <div id="upload-screen">
+      <h2>National ID</h2>
+      <p>Upload a clear photo of the front of your government ID.</p>
+      <div class="id-icon">
+        <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="200" height="120" rx="8" fill="#F5F5F5" stroke="#000" stroke-width="2"/>
+          <!-- Hình chữ nhật ảnh đại diện -->
+          <rect x="30" y="30" width="40" height="60" fill="none" stroke="#000" stroke-width="2"/>
+          <!-- Sử dụng thẻ image để hiển thị biểu tượng người -->
+          <image x="30" y="30" width="40" height="40" href="https://png.pngtree.com/png-vector/20191120/ourlarge/pngtree-biometrics-face-recognition-icon-on-gray-background-png-image_2007585.jpg" />
+          <!-- Vòng tròn dấu X -->
+          <circle cx="170" cy="30" r="15" fill="#D3D3D3" stroke="#000" stroke-width="2"/>
+          <path d="M160 20 L180 40 M180 20 L160 40" fill="none" stroke="#000" stroke-width="2"/>
+          <!-- Đường chấm -->
+          <line x1="90" y1="40" x2="150" y2="40" stroke="#000" stroke-width="2" stroke-dasharray="5,5"/>
+          <line x1="90" y1="60" x2="150" y2="60" stroke="#000" stroke-width="2" stroke-dasharray="5,5"/>
+          <line x1="90" y1="80" x2="150" y2="80" stroke="#000" stroke-width="2" stroke-dasharray="5,5"/>
+        </svg>
+        <div class="id-frame"><span></span></div>
+      </div>
+      <label class="upload-btn" for="image-input">Upload Photo</label>
+      <input type="file" id="image-input" name="image" accept="image/*" required />
+    </div>
+
+    <!-- Giao diện quét -->
+    <div id="scanning-screen" style="display: none;">
+      <h2>Uploading your ID...</h2>
+      <p>Hang tight—this may take a few seconds.</p>
+      <div class="id-icon">
+        <svg viewBox="0 0 200 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="200" height="120" rx="8" fill="#F5F5F5" stroke="#000" stroke-width="2"/>
+          <rect x="30" y="30" width="40" height="60" fill="none" stroke="#000" stroke-width="2"/>
+          <image x="30" y="30" width="40" height="60" href="https://png.pngtree.com/png-vector/20191120/ourlarge/pngtree-biometrics-face-recognition-icon-on-gray-background-png-image_2007585.jpg" />
+          <circle cx="170" cy="30" r="15" fill="#D3D3D3" stroke="#000" stroke-width="2"/>
+          <path d="M160 20 L180 40 M180 20 L160 40" fill="none" stroke="#000" stroke-width="2"/>
+          <line x1="90" y1="40" x2="150" y2="40" stroke="#000" stroke-width="2" stroke-dasharray="5,5"/>
+          <line x1="90" y1="60" x2="150" y2="60" stroke="#000" stroke-width="2" stroke-dasharray="5,5"/>
+          <line x1="90" y1="80" x2="150" y2="80" stroke="#000" stroke-width="2" stroke-dasharray="5,5"/>
+        </svg>
+        <div class="id-frame"><span></span></div>
+        <div class="scan-bar"></div>
+      </div>
+    </div>
+
+    <!-- Giao diện thành công -->
+    <div id="success-screen" class="result-success">
+      <h2>Verified</h2>
+      <div class="checkmark">✓</div>
+    </div>
+
+    <!-- Giao diện thất bại -->
+    <div id="failure-screen" class="result-failure" style="display: none;">
+      <h2>Looks like we couldn’t upload your ID</h2>
+      <div class="cross">✗</div>
+      <p>Let’s give it another shot. Try retaking or uploading a photo of your ID with these helpful tips in mind:</p>
+      <div class="tips">
+        <ul>
+          <li>Avoid using flash—opt for natural daylight instead</li>
+          <li>Keep all four corners of the ID in your photo</li>
+          <li>If the photo’s blurry, try slowly moving your ID closer to the camera</li>
+          <li>Make sure all your info is clear and visible</li>
+        </ul>
+      </div>
+      <button class="try-again-btn" onclick="tryAgain()">Try again</button>
+    </div>
+
+    <!-- Vẫn giữ phần spinner và result cũ nhưng ẩn đi -->
+    <div id="spinner" class="spinner" style="display:none;"></div>
+    <div id="result" class="result" style="display:none;"></div>
+  </div>
+
+  <script>
+    const uploadScreen = document.getElementById('upload-screen');
+    const scanningScreen = document.getElementById('scanning-screen');
+    const successScreen = document.getElementById('success-screen');
+    const failureScreen = document.getElementById('failure-screen');
+    const fileInput = document.getElementById('image-input');
+    const resultDiv = document.getElementById('result');
+    const spinner = document.getElementById('spinner');
+    const scanBar = document.querySelector('.scan-bar');
+
+    fileInput.addEventListener('change', async () => {
+      if (fileInput.files.length > 0) {
+        uploadScreen.style.display = 'none';
+        scanningScreen.style.display = 'block';
+        scanBar.style.display = 'block';
+
+        const formData = new FormData();
+        formData.append('image', fileInput.files[0]);
+
+        try {
+          const response = await fetch('http://127.0.0.1:5000/predict', {
+            method: 'POST',
+            body: formData
+          });
+
+          const data = await response.json();
+          scanningScreen.style.display = 'none';
+          scanBar.style.display = 'none';
+
+          if (!response.ok || data.error) {
+            throw new Error(data.error || 'Server error occurred');
+          }
+
+          if (data.result.toLowerCase().includes('real')) {
+            successScreen.style.display = 'block';
+          } else {
+            failureScreen.style.display = 'block';
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          scanningScreen.style.display = 'none';
+          scanBar.style.display = 'none';
+          failureScreen.style.display = 'block';
+        }
+      }
+    });
+
+    function tryAgain() {
+      failureScreen.style.display = 'none';
+      uploadScreen.style.display = 'block';
+      fileInput.value = '';
+    }
+  </script>
+</body>
+</html>
